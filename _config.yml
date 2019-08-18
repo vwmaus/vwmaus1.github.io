@@ -82,6 +82,7 @@ analytics:
 author:
   name             : "Victor Maus"
   avatar           : "profile.png"
+  iconcolor        : "dimgray"
   bio              : "I\'m a researcher in environmental science"
   location         : "Vienna, Austria"
   employer         : #"WU - Vienna University of Economics and Business"
