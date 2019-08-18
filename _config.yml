@@ -115,8 +115,8 @@ author:
   xing             :
   youtube          :
   wikipedia        :
-
-
+  researcherid     : "https://publons.com/researcher/D-9547-2013/"
+  lattes           : "http://lattes.cnpq.br/4419790523552484"
 # Reading Files
 include:
   - .htaccess
