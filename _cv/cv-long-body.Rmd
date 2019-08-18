@@ -1,0 +1,234 @@
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(vitae)
+library(rorcid)
+library(scholar)
+library(tidyverse)
+library(janitor)
+library(usethis)
+library(R.utils)
+library(countrycode)
+get_funding_amount <-function(x, orcid){
+  funding <- rorcid::orcid_fundings(orcid, put_code = x)[[1]]
+  return(sprintf("%s %s %s %s", funding$`organization-defined-type`$value, stringr::str_to_title(funding$type), funding$amount$`currency-code`, format(round(as.numeric(funding$amount$value), 2), nsmall=2, big.mark=",")))
+}
+```
+
+```{r my-data, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE,cache=TRUE}
+my_researcher_id <- "D-9547-2013"
+my_scholar_id <- "wN2LseQAAAAJ&hl"
+my_orcid <- "0000-0002-7385-4723"
+my_orcid_info <- rorcid::orcid_id(my_orcid)
+my_other_names <- rorcid::orcid_other_names(my_orcid)
+my_address <- rorcid::orcid_address(my_orcid)
+my_educations <- do.call("bind_rows", rorcid::orcid_educations(my_orcid)[[my_orcid]]$`affiliation-group`$summaries)
+my_employments <- do.call("bind_rows", rorcid::orcid_employments(my_orcid)[[my_orcid]]$`affiliation-group`$summaries)
+my_fundings <- do.call("bind_rows", rorcid::orcid_fundings(my_orcid)[[my_orcid]]$group$`funding-summary`) %>% 
+  dplyr::mutate(what = unlist(purrr::map(.x = `put-code`, .f = get_funding_amount, orcid = my_orcid)))
+my_peer_reviews <- rorcid::orcid_peer_reviews(my_orcid)[[my_orcid]]
+my_publications_file <- "./publications.bib"
+my_publications <- rorcid::works(my_orcid_info)
+my_publications_scholar <- get_publications(my_scholar_id, cstart = 0, pagesize = 1000, flush = F)
+my_r_packages <- pkgsearch::ps(paste(my_orcid_info$`0000-0002-7385-4723`$name$`given-names`$value, 
+                                     my_orcid_info$`0000-0002-7385-4723`$name$`family-name`$value), size = 100) %>%
+  filter(purrr::map_lgl(package_data, ~ grepl(paste(my_orcid_info$`0000-0002-7385-4723`$name$`given-names`$value, 
+                                                    my_orcid_info$`0000-0002-7385-4723`$name$`family-name`$value), .x$Author, fixed = TRUE)))
+```
+
+# Main areas of research
+
+Geoinformatics, Remote Sensing, Environmental modeling 
+
+# Academic career
+
+```{r employment}
+my_employments %>% 
+  dplyr::filter(`employment-summary.role-title` != "Trainee") %>% 
+  vitae::detailed_entries(
+    what = `employment-summary.role-title`,
+    when = glue::glue("{`employment-summary.start-date.year.value`} - {ifelse(is.na(`employment-summary.end-date.year.value`), 'Today', `employment-summary.end-date.year.value`)}"),
+    where = glue::glue("{`employment-summary.department-name`}, {`employment-summary.organization.name`}, {countrycode::countrycode(sourcevar = `employment-summary.organization.address.country`, origin = 'iso2c', destination = 'country.name')}")
+    # where = glue::glue("{`employment-summary.department-name`}, {`employment-summary.organization.name`}, {`employment-summary.organization.address.city`}{ifelse(is.na(`employment-summary.organization.address.region`), '', paste0(', ', `employment-summary.organization.address.region`))}, {countrycode::countrycode(sourcevar = `employment-summary.organization.address.country`, origin = 'iso2c', destination = 'country.name')}")
+  )
+```
+
+
+<!-- # Experience non scientific -->
+  
+  <!-- ```{r non-scientific} -->
+  <!-- my_employments %>%  -->
+  <!--   dplyr::filter(`employment-summary.role-title` == "Trainee") %>%  -->
+  <!--   vitae::detailed_entries( -->
+                                    <!--     what = glue::glue("{`employment-summary.role-title`} - {`employment-summary.department-name`}"), -->
+                                    <!--     when = glue::glue("{`employment-summary.start-date.year.value`} - {ifelse(is.na(`employment-summary.end-date.year.value`), 'Today', `employment-summary.end-date.year.value`)}"), -->
+                                    <!--     where = glue::glue("{`employment-summary.organization.name`}, {`employment-summary.organization.address.city`}{ifelse(is.na(`employment-summary.organization.address.region`), '', paste0(', ', `employment-summary.organization.address.region`))}, {countrycode::countrycode(sourcevar = `employment-summary.organization.address.country`, origin = 'iso2c', destination = 'country.name')}") -->
+                                    <!--   ) -->
+  <!-- ``` -->
+  
+  # Education 
+  
+  ```{r education}
+my_educations %>% 
+  dplyr::mutate(supervisor = c("Prof. Dr. Gilberto Câmara", "Prof. Dr. Elson Magalhães Toledo", "Prof. Dr. Afranio Almir Righes")) %>% 
+  vitae::detailed_entries(
+    what = `education-summary.role-title`,
+    when = glue::glue("{`education-summary.start-date.year.value`} - {`education-summary.end-date.year.value`}"),
+    where = glue::glue("{`education-summary.department-name`}, {`education-summary.organization.name`}, {countrycode::countrycode(sourcevar = `education-summary.organization.address.country`, origin = 'iso2c', destination = 'country.name')}"),
+    with = glue::glue("Supervisor {`supervisor`}")
+  ) 
+```
+
+# Funded projects
+
+```{r grants}
+my_fundings %>%
+  dplyr::filter(type == "grant") %>%
+  dplyr::arrange(desc(`start-date.year.value`)) %>% 
+  vitae::detailed_entries(
+    what = glue::glue("{what}"),
+    when = `start-date.year.value`,
+    where = glue::glue("{`organization.name`}, {`organization.address.city`}{ifelse(is.na(`organization.address.region`), '', paste0(', ', `organization.address.region`))}, {countrycode::countrycode(sourcevar = `organization.address.country`, origin = 'iso2c', destination = 'country.name')}"),
+    with = glue::glue("Principal investigator")
+  )
+```
+
+# Fellowships and awards
+```{r awards}
+my_fundings %>%
+  dplyr::filter(type == "award") %>%
+  dplyr::arrange(desc(`start-date.year.value`)) %>% 
+  vitae::detailed_entries(
+    what = what,
+    when = `start-date.year.value`,
+    where = glue::glue("{`organization.name`}, {`organization.address.city`}",
+                       "{ifelse(is.na(`organization.address.region`), '', paste0('-', `organization.address.region`))}", ", ",
+                       "{countrycode::countrycode(sourcevar = `organization.address.country`, origin = 'iso2c', destination = 'country.name')}")
+  )
+```
+
+# Teaching experience 
+```{r teaching}
+# readr::read_csv("./data/teaching.csv") %>% 
+#   dplyr::arrange(desc(Year), Course) %>%
+#   vitae::detailed_entries(
+#     what = glue::glue("{Course} ({Hours}h)"),
+#     when = Year,
+#     with = glue::glue("{Organization}, {City}{ifelse(is.na(Region), '', paste0('-', Region))}, {Country}")
+#   )
+readr::read_csv("./teaching.csv") %>% 
+  dplyr::group_by(Organization, City, Region, Country, Course) %>% 
+  dplyr::summarise(when = paste0(min(Year), " - ", max(Year)), Year = min(Year)) %>% 
+  dplyr::arrange(desc(Year), Course) %>%
+  vitae::detailed_entries(
+    what = glue::glue("{Course}"),
+    when = when,
+    with = glue::glue("{Organization}, {City}{ifelse(is.na(Region), '', paste0('-', Region))}, {Country}")
+  )
+```
+
+# Supervision
+```{r supervising}
+# readr::read_csv("./data/supervisons.csv") %>% 
+#   dplyr::arrange(desc(Year), desc(Type), Student) %>% 
+#   vitae::detailed_entries(
+#     what = glue::glue("{Student}, {Type}"),
+#     when = Year,
+#     where = glue::glue("{Organization}, {City}{ifelse(is.na(Region), '', paste0('-', Region))}, {Country}")
+#   )
+fun <- function(x, y, z) paste0(x, " ", y, ifelse(x>1," students"," student"), ifelse(is.na(z), '', paste0(' in the ', z)))
+readr::read_csv("./supervisons.csv") %>% 
+  dplyr::group_by(Organization, City, Region, Country, Type, Program) %>% 
+  dplyr::summarise(n = n(), `Year-start` = min(`Year-start`), `Year-end` = max(`Year-end`)) %>%
+  dplyr::arrange(desc(Type)) %>% 
+  dplyr::group_by(Organization, City, Region, Country, Program) %>% 
+  dplyr::summarise(what = paste(purrr::pmap(.l = list(x = n, y = Type, z = Program), .f = fun), collapse = " / "), when = paste0(min(`Year-start`), " - ", max(`Year-end`)), `Year-start` = min(`Year-start`), `Year-end` = max(`Year-end`)) %>% 
+  dplyr::arrange(desc(`Year-start`), desc(`Year-end`)) %>% 
+  vitae::detailed_entries(
+    what = what,
+    when = when,
+    where = glue::glue("{Organization}, {City}{ifelse(is.na(Region), '', paste0('-', Region))}, {Country}")
+  )
+```
+
+# Selected talks 
+```{r talks}
+readr::read_csv("./talks.csv") %>% 
+  dplyr::filter(Selected == 1) %>% 
+  dplyr::mutate(year = lubridate::year(`start-date`)) %>% 
+  dplyr::arrange(desc(year)) %>%
+  vitae::detailed_entries(
+    what = Title,
+    when = year,
+    where = glue::glue("{Event}, {Organization}, {City}, {Country}")
+  )
+```
+
+<!-- # Journal review assignments -->
+  <!-- ```{r review-assignments} -->
+  <!-- my_peer_reviews -->
+  <!-- readr::read_csv("./data/supervisons.csv") %>%  -->
+  <!--   dplyr::arrange(desc(Year)) %>%  -->
+  <!--   vitae::detailed_entries( -->
+                                    <!--     what = Title, -->
+                                    <!--     when = Year, -->
+                                    <!--     where = glue::glue("{Organization}, {City}{ifelse(is.na(Region), '', paste0('-', Region))}, {Country}") -->
+                                    <!--   ) -->
+  <!-- ``` -->
+  
+  <!-- # International cooperation partners -->
+  
+  # 10 most important scientific publications
+  ```{r 10-most-important-publications}
+# bibtypes: Article InProceedings Manual Misc MastersThesis PhdThesis TechReport
+vitae::bibliography_entries(my_publications_file) %>%
+  dplyr::filter(bibtype %in% c("Article", "InProceedings") & peer_reviewed == TRUE) %>%
+  dplyr::mutate(top_10 = as.numeric(top_10)) %>% 
+  dplyr::filter(!is.na(top_10)) %>% 
+  dplyr::arrange(top_10, desc(year), desc(author), desc(title)) 
+```
+
+# Software
+```{r software-publications}
+# bibtypes: Article InProceedings Manual Misc MastersThesis PhdThesis TechReport 
+vitae::bibliography_entries(my_publications_file) %>%
+  dplyr::filter(bibtype == "Software") %>%
+  dplyr::arrange(desc(year), desc(author), desc(title))
+```
+
+# Thesis 
+```{r thesis-publications}
+# bibtypes: Article InProceedings Manual Misc MastersThesis PhdThesis TechReport 
+vitae::bibliography_entries(my_publications_file) %>%
+  dplyr::filter(bibtype %in% c("MastersThesis", "PhdThesis", "Thesis")) %>%
+  dplyr::arrange(desc(year), desc(author), desc(title))
+```
+
+# Science communication
+```{r other-publications}
+# bibtypes: Article InProceedings Manual Misc MastersThesis PhdThesis TechReport 
+vitae::bibliography_entries(my_publications_file) %>%
+  dplyr::filter(bibtype %in% c("Misc")) %>%
+  dplyr::arrange(desc(year), desc(author), desc(title))
+```
+
+<!-- \newpage -->
+  <!-- # Publications -->
+  
+  <!-- ## Peer reviewed publications  -->
+  <!-- ```{r peer-reviewed-publications} -->
+  <!-- # bibtypes: Article InProceedings Manual Misc MastersThesis PhdThesis TechReport -->
+  <!-- vitae::bibliography_entries(my_publications_file) %>%  -->
+  <!--   dplyr::filter(bibtype %in% c("Article", "InProceedings") & peer_reviewed == TRUE) %>% -->
+  <!--   dplyr::arrange(desc(year), desc(author), desc(title))  -->
+  <!-- ``` -->
+  
+  <!-- ## Non peer reviewed publications -->
+  <!-- ```{r non-peer-reviewed-publications} -->
+  <!-- # bibtypes: Article InProceedings Manual Misc MastersThesis PhdThesis TechReport  -->
+  <!-- vitae::bibliography_entries(my_publications_file) %>% -->
+  <!--   dplyr::filter(bibtype %in% c("Article", "InProceedings") & full_paper == TRUE & peer_reviewed == FALSE) %>%  -->
+  <!--   dplyr::arrange(desc(year), desc(author), desc(title)) -->
+  <!-- ``` -->
+  
+  
+  

@@ -1,0 +1,8 @@
+---
+output:
+  md_document:
+    variant: markdown_github
+---
+
+```{r child = 'cv-2page-body.Rmd'}
+```
