@@ -17,8 +17,6 @@ Geoinformatics, Remote Sensing, Environmental modeling
 Academic career
 ===============
 
-    ## [1] 1
-
 <!-- # Experience non scientific -->
 <!-- ```{r non-scientific} -->
 <!-- my_employments %>%  -->
@@ -29,7 +27,6 @@ Academic career
 <!--     where = glue::glue("{`employment-summary.organization.name`}, {`employment-summary.organization.address.city`}{ifelse(is.na(`employment-summary.organization.address.region`), '', paste0(', ', `employment-summary.organization.address.region`))}, {countrycode::countrycode(sourcevar = `employment-summary.organization.address.country`, origin = 'iso2c', destination = 'country.name')}") -->
 <!--   ) -->
 <!-- ``` -->
-
 Education
 =========
 
@@ -60,7 +57,6 @@ Selected talks
 <!--   ) -->
 <!-- ``` -->
 <!-- # International cooperation partners -->
-
 10 most important scientific publications
 =========================================
 

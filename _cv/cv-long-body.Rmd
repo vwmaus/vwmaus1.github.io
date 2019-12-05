@@ -65,9 +65,9 @@ my_employments %>%
                                     <!--   ) -->
   <!-- ``` -->
   
-  # Education 
+# Education 
   
-  ```{r education}
+```{r education}
 my_educations %>% 
   dplyr::mutate(supervisor = c("Prof. Dr. Gilberto Câmara", "Prof. Dr. Elson Magalhães Toledo", "Prof. Dr. Afranio Almir Righes")) %>% 
   vitae::detailed_entries(
@@ -163,28 +163,16 @@ readr::read_csv("./talks.csv") %>%
   )
 ```
 
-<!-- # Journal review assignments -->
-  <!-- ```{r review-assignments} -->
-  <!-- my_peer_reviews -->
-  <!-- readr::read_csv("./data/supervisons.csv") %>%  -->
-  <!--   dplyr::arrange(desc(Year)) %>%  -->
-  <!--   vitae::detailed_entries( -->
-                                    <!--     what = Title, -->
-                                    <!--     when = Year, -->
-                                    <!--     where = glue::glue("{Organization}, {City}{ifelse(is.na(Region), '', paste0('-', Region))}, {Country}") -->
-                                    <!--   ) -->
-  <!-- ``` -->
-  
-  <!-- # International cooperation partners -->
-  
-  # 10 most important scientific publications
-  ```{r 10-most-important-publications}
+\newpage
+# Peer-reviwed scientific publications
+```{r 10-most-important-publications}
 # bibtypes: Article InProceedings Manual Misc MastersThesis PhdThesis TechReport
 vitae::bibliography_entries(my_publications_file) %>%
   dplyr::filter(bibtype %in% c("Article", "InProceedings") & peer_reviewed == TRUE) %>%
-  dplyr::mutate(top_10 = as.numeric(top_10)) %>% 
-  dplyr::filter(!is.na(top_10)) %>% 
-  dplyr::arrange(top_10, desc(year), desc(author), desc(title)) 
+  # dplyr::mutate(top_10 = as.numeric(top_10)) %>% 
+  # dplyr::filter(year > 2014) %>% 
+  dplyr::arrange(desc(year), desc(author), desc(title)) %>% 
+  dplyr::mutate(pages = ifelse(!is.na(doi), paste0(pages, ". DOI: ", doi), pages)) 
 ```
 
 # Software
@@ -200,7 +188,7 @@ vitae::bibliography_entries(my_publications_file) %>%
 # bibtypes: Article InProceedings Manual Misc MastersThesis PhdThesis TechReport 
 vitae::bibliography_entries(my_publications_file) %>%
   dplyr::filter(bibtype %in% c("MastersThesis", "PhdThesis", "Thesis")) %>%
-  dplyr::arrange(desc(year), desc(author), desc(title))
+  dplyr::arrange(desc(year), desc(author), desc(title)) 
 ```
 
 # Science communication
@@ -211,24 +199,32 @@ vitae::bibliography_entries(my_publications_file) %>%
   dplyr::arrange(desc(year), desc(author), desc(title))
 ```
 
+# Journal review assignments
+  - Remote Sensing of Environment  
+  - Computers \& geosciences  
+  - International Journal of Remote Sensing  
+  - IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing  
+  - Remote Sensing MDPI  
+  - Sustainability MDPI  
+
 <!-- \newpage -->
-  <!-- # Publications -->
-  
-  <!-- ## Peer reviewed publications  -->
-  <!-- ```{r peer-reviewed-publications} -->
-  <!-- # bibtypes: Article InProceedings Manual Misc MastersThesis PhdThesis TechReport -->
-  <!-- vitae::bibliography_entries(my_publications_file) %>%  -->
-  <!--   dplyr::filter(bibtype %in% c("Article", "InProceedings") & peer_reviewed == TRUE) %>% -->
-  <!--   dplyr::arrange(desc(year), desc(author), desc(title))  -->
-  <!-- ``` -->
-  
-  <!-- ## Non peer reviewed publications -->
-  <!-- ```{r non-peer-reviewed-publications} -->
-  <!-- # bibtypes: Article InProceedings Manual Misc MastersThesis PhdThesis TechReport  -->
-  <!-- vitae::bibliography_entries(my_publications_file) %>% -->
-  <!--   dplyr::filter(bibtype %in% c("Article", "InProceedings") & full_paper == TRUE & peer_reviewed == FALSE) %>%  -->
-  <!--   dplyr::arrange(desc(year), desc(author), desc(title)) -->
-  <!-- ``` -->
+<!-- # Publications -->
+
+<!-- ## Peer reviewed publications -->
+<!-- ```{r peer-reviewed-publications} -->
+<!-- # bibtypes: Article InProceedings Manual Misc MastersThesis PhdThesis TechReport -->
+<!-- vitae::bibliography_entries(my_publications_file) %>% -->
+<!--   dplyr::filter(bibtype %in% c("Article", "InProceedings") & peer_reviewed == TRUE) %>% -->
+<!--   dplyr::arrange(desc(year), desc(author), desc(title)) -->
+<!-- ``` -->
+
+<!-- ## Non peer reviewed publications -->
+<!-- ```{r non-peer-reviewed-publications} -->
+<!-- # bibtypes: Article InProceedings Manual Misc MastersThesis PhdThesis TechReport -->
+<!-- vitae::bibliography_entries(my_publications_file) %>% -->
+<!--   dplyr::filter(bibtype %in% c("Article", "InProceedings") & full_paper == TRUE & peer_reviewed == FALSE) %>% -->
+<!--   dplyr::arrange(desc(year), desc(author), desc(title)) -->
+<!-- ``` -->
   
   
   
